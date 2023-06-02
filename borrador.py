@@ -25,19 +25,21 @@ engine = create_engine('postgresql://postgres:proyecto2@proy2database.czhxhldkmq
 datos_originales=pd.read_sql('SELECT * FROM icfes_data', engine)
 datos_originales.head()
 
-# Read model from BIF file 
-#reader = BIFReader("ModeloK2.bif")##poner aqui modelo bif
-#modelo = reader.get_model()
+##Obtener base discretizada
+datos=pd.read_sql('SELECT * FROM datos_discretizados',engine)
+datos.head()
 
-# Print model 
-#print(modelo)
+# Read model from BIF file 
+reader = BIFReader("ModeloICFES.bif")
+modelo = reader.get_model()
+
 
 from pgmpy.estimators import BayesianEstimator
-#emv = BayesianEstimator(model=modelo, data=datos)
-#modelo.fit(data=datos, estimator = BayesianEstimator)   
-#modelo.check_model()
+emv = BayesianEstimator(model=modelo, data=datos)
+modelo.fit(data=datos, estimator = BayesianEstimator)   
+modelo.check_model()
 
-#infer = VariableElimination(modelo)
+infer = VariableElimination(modelo)
 
 
 # Crear la aplicación Dash
@@ -235,7 +237,7 @@ fig3.update_layout(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")
 tab1_content = dbc.Card(
     dbc.CardBody([
     html.H2('¿Qué dicen los datos?'),
-    html.P(children='Queremos proporcionarte información relevante sobre los resultados de la prueba Saber 11 - Icfes, basada en estadísticas del conjunto de datos disponible en el repositorio de Datos Abiertos. Esperamos que esta información sea útil para ti.' ),
+    html.P(children='A continuación proporcionamos información relevante sobre los resultados de la prueba Saber 11° en la ciudad de Bogotá dentro de los años 2019 a 2022, basada en estadísticas del conjunto de datos disponible en el repositorio de Datos Abiertos.' ),
     html.Div([
   
     html.Div([
@@ -255,97 +257,191 @@ tab1_content = dbc.Card(
 
 tab2_content=dbc.Card(
     dbc.CardBody([
-    html.P(children='Aquí te brindamos una herramienta que puedes utilizar para predecir el puntaje global de la prueba saber 11 y con ello, apoyarte en la toma de decisiones' ),
+    html.P(children='Esta es una herramienta que se puede utilizar para predecir el puntaje global de la prueba saber 11° de un estudiante de Bogotá dada las características de su entorno' ),
     html.Br(),
     
-    html.H6("Ingresa el valor de la información que tengas disponible:"),
+    html.H6("Ingrese el valor de la información que tenga disponible:"),
     
     html.Div([
-        html.Div(['Edad:',
+        html.Div(['Género de estudiante:',
                 dcc.Dropdown(
-                    id='input_age',
+                    id='input_genero',
                     options=[
-                        {'label': 'Entre 25 y 40 años', 'value': 1},
-                        {'label': 'Entre 41 y 50 años', 'value': 2},
-                        {'label': 'Entre 51 y 60 años', 'value': 3},
-                        {'label': 'Mayor a 60 años', 'value': 4}
+                        {'label': 'Mujer', 'value': 1},
+                        {'label': 'Hombre', 'value': 0}
             ],
             value='-1'
-        )],  style={'width': '50%', 'marginRight': '50px'}),   
-        html.Div(['Sexo:',
+        )],  style={'width': '33%', 'marginRight': '50px'}),   
+        html.Div(['Naturaleza del Colegio:',
         dcc.Dropdown(
-            id='input_sex',
+            id='input_natu_colegio',
             options=[
-                {'label': 'Mujer', 'value': 0},
-                {'label': 'Hombre', 'value': 1}
+                {'label': 'Oficial', 'value': 1},
+                {'label': 'No Oficial', 'value': 0}
             ],
             value='-1'
-        )], style={'width': '50%'})],  style={'display': 'flex', "width": "100%"}),
+        )], style={'width': '33%','marginRight': '50px'}), 
+        html.Div(['Jornada:',
+        dcc.Dropdown(
+            id='input_jornada',
+            options=[
+                {'label': 'Mañana', 'value': 1},
+                {'label': 'Tarde', 'value': 2},
+                {'label': 'Completa', 'value': 3},
+                {'label': 'Noche', 'value': 4},
+                {'label': 'Única', 'value': 5},
+                {'label': 'Sabatina', 'value': 0}
+            ],
+            value='-1'
+        )], style={'width': '33%'})],
+        
+        style={'display': 'flex', "width": "100%","margin-bottom": "30px"}),
     
     html.Div([
-            html.Div(['Nivel de colesterol:',
+            html.Div(['Desempeño en inglés:',
             dcc.Dropdown(
-                id='input_chol',
+                id='input_ingles',
                 options=[
-                    {'label': 'Menor o igual a 200', 'value': 1},
-                    {'label': 'Entre 201 y 240', 'value': 2},
-                    {'label': 'Mayor o igual a 240', 'value': 3},
+                    {'label': 'A-', 'value': 1},
+                    {'label': 'A1', 'value': 2},
+                    {'label': 'A2', 'value': 3},
+                    {'label': 'B1', 'value': 4},
+                    {'label': 'B+', 'value': 5}
                 ],
                 value='-1'
-            )],  style={'width': '50%','marginRight': '50px'}),
+            )],  style={'width': '33%','marginRight': '50px'}),
             
-            html.Div(['Nivel de presión arterial en reposo:',
+            html.Div(['Estrato de la vivienda :',
             dcc.Dropdown(
-                id='input_trestbps',
+                id='input_estrato',
                 options=[
-                    {'label': 'Menor o igual a 120', 'value': 1},
-                    {'label': 'Entre 121 y 139', 'value': 2},
-                    {'label': 'Entre 140 y 159', 'value': 3},
-                    {'label': 'Entre 160 y 179', 'value': 4},
-                    {'label': 'Mayor o igual a 159', 'value': 5},
+                    {'label': '1', 'value': 1},
+                    {'label': '2', 'value': 2},
+                    {'label': '3', 'value': 3},
+                    {'label': '4', 'value': 4},
+                    {'label': '5', 'value': 5},
+                    {'label': '6', 'value': 6},
+                    {'label': 'Sin estrato', 'value': 0}
                 ],
                 value='-1'
-            )], style={'width': '50%'})],  style={'display': 'flex', "width": "100%"}),
-    
-    html.Div([
-            html.Div(['En caso de presentar talasemia, indica el tipo:',
+            )], style={'width': '33%','marginRight': '50px'}), 
+            html.Div(['¿En la familia tienen internet?',
             dcc.Dropdown(
-                id='input_thal',
-                options=[
-                    {'label': 'Normal', 'value': 3},
-                    {'label': 'Defecto fijo', 'value': 6},
-                    {'label': 'Defecto reversible', 'value': 7},
-                ],
-                value='-1'
-            )],  style={'width': '50%', 'marginRight': '50px'}),
-            
-            html.Div(['El nivel de azucar en la sangre en ayunas es mayor a 120 mg/dl:',
-            dcc.Dropdown(
-                id='input_fbs',
+                id='input_internet',
                 options=[
                     {'label': 'Sí', 'value': 1},
-                    {'label': 'No', 'value': 0},
-                   
+                    {'label': 'No', 'value': 0}
                 ],
                 value='-1'
-            )], style={'width': '50%'})],  style={'display': 'flex', "width": "100%"}),
+            )], style={'width': '33%'})],
+            
+            style={'display': 'flex', "width": "100%","margin-bottom": "30px"}),
+        
+    html.Div([
+            html.Div(['¿En la familia tienen computador?',
+            dcc.Dropdown(
+                id='input_compu',
+                options=[
+                    {'label': 'Sí', 'value': 1},
+                    {'label': 'No', 'value': 0}
+                ],
+                value='-1'
+            )],  style={'width': '33%','marginRight': '50px'}),
+            
+            html.Div(['¿En la familia tienen lavadora?',
+            dcc.Dropdown(
+                id='input_lavadora',
+                options=[
+                    {'label': 'Sí', 'value': 1},
+                    {'label': 'No', 'value': 0}
+                ],
+                value='-1'
+            )], style={'width': '33%','marginRight': '50px'}), 
+            html.Div(['¿En la familia tienen automóvil?',
+            dcc.Dropdown(
+                id='input_auto',
+                options=[
+                    {'label': 'Sí', 'value': 1},
+                    {'label': 'No', 'value': 0}
+                ],
+                value='-1'
+            )], style={'width': '33%'})],
+            
+            style={'display': 'flex', "width": "100%","margin-bottom": "30px"}),
+    html.Div([
+            html.Div(['¿Cuántas personas hay en su hogar?',
+            dcc.Dropdown(
+                id='input_personas_hogar',
+                options=[
+                    {'label': '1 a 2', 'value': 1},
+                    {'label': '3 a 4', 'value': 2},
+                    {'label': '5 a 6', 'value': 3},
+                    {'label': '7 a 8', 'value': 4},
+                    {'label': '9 o más', 'value': 5}
+                ],
+                value='-1'
+            )],  style={'width': '33%','marginRight': '50px'}),
+            
+            html.Div(['Nivel de educación de la madre:',
+            dcc.Dropdown(
+                id='input_madre',
+                options=[
+                    {'label': 'Primaria (Completa o incompleta)', 'value': 1},
+                    {'label': 'Secundaria/Bachillerato (Completa o incompleta)', 'value': 2},
+                    {'label': 'Técnica o tecnologica (Completa o incompleta)', 'value': 3},
+                    {'label': 'Profesional (Completa o incompleta)', 'value': 4},
+                    {'label': 'Posgrado', 'value': 5},
+                    {'label': 'No aplica o no sabe', 'value': 0}
+                ],
+                value='-1'
+            )], style={'width': '33%','marginRight': '50px'}), 
+            html.Div(['Nivel de educación del padre:',
+            dcc.Dropdown(
+                id='input_padre',
+                options=[
+                    {'label': 'Primaria (Completa o incompleta)', 'value': 1},
+                    {'label': 'Secundaria/Bachillerato (Completa o incompleta)', 'value': 2},
+                    {'label': 'Técnica o tecnologica (Completa o incompleta)', 'value': 3},
+                    {'label': 'Profesional (Completa o incompleta)', 'value': 4},
+                    {'label': 'Posgrado', 'value': 5},
+                    {'label': 'No aplica o no sabe', 'value': 0}
+                ],
+                value='-1'
+            )], style={'width': '33%'})],
+            
+            style={'display': 'flex', "width": "100%","margin-bottom": "30px"}),
+    html.Div([
+            html.Div(['Número de cuartos en su hogar:',
+            dcc.Dropdown(
+                id='input_cuartos_hogar',
+                options=[
+                    {'label': '1', 'value': 1},
+                    {'label': '2', 'value': 2},
+                    {'label': '3', 'value': 3},
+                    {'label': '4', 'value': 4},
+                    {'label': '5', 'value': 5},
+                    {'label': '6 o mas', 'value': 6}
+                ],
+                value='-1'
+            )],  style={'width': '33%','marginRight': '50px'})],
+            style={'display': 'flex', "width": "100%"}),   
     html.Br(),
-    html.H6("A continuación te presentamos la probabilidad de tener o no una enfermedad cardiaca:"),
+    html.H6("A continuación presentamos la probabilidad de obtener los siguientes puntajes en el Examen Saber 11°:"),
     html.Br(),
     html.Div([
         html.Div(
-        dcc.Graph(id='grafico'),
+        dcc.Graph(id='figura'),
          style={'width': '60%'}),
         html.Div([
             html.Br(),
             html.Div(id='recomendación')],
-            style={'textAlign': 'left','marginTop':'150px','width': '30%'})], style={'display': 'flex','width': '100%'}, className='row'),
+            style={'textAlign': 'left','marginTop':'150px','width': '30%', 'fontSize': '20px'})], style={'display': 'flex','width': '100%'}, className='row'),
     ],  style={'margin': '30px'}
 ))
 # Definir las pestañas
 tabs = dbc.Tabs([
     dbc.Tab(label='Datos de interés', tab_id='tab-1', children=[tab1_content]),
-    dbc.Tab(label='Obten aquí tu probabilidad', tab_id='tab-2', children=[tab2_content]),
+    dbc.Tab(label='Pronóstico', tab_id='tab-2', children=[tab2_content]),
 ], id='tabs', active_tab='tab-1', className="nav nav-tabs")
 
 
@@ -354,7 +450,7 @@ app.layout = dbc.CardBody([
        html.Div([
        html.Img(src='https://upload.wikimedia.org/wikipedia/commons/a/a2/Icfes_logo_2022.png',
                  style={'height': '70%', 'width': 'auto','max-width': '100%'}),
-        html.H1(children='Resultados Examen Saber 11°-ICFES',
+        html.H1(children='Análisis de resultados Examen Saber 11°',
                 style={'textAlign': 'center', 'marginTop': '25px', "width": "80%", 'fontSize': '3vw'}),
         html.Img(src='https://educacion.uniandes.edu.co/sites/default/files/Uniandes.png',
                  style={'height': '60%', 'width': 'auto', 'max-width': '100%', 'marginTop': '20px'})
@@ -366,21 +462,29 @@ app.layout = dbc.CardBody([
 
 
 @app.callback(
-    [Output(component_id='grafico', component_property='figure'),
+    [Output(component_id='figura', component_property='figure'),
      Output(component_id='recomendación', component_property='children')]
      ,
     [
-     Input(component_id='input_age', component_property='value'),
-     Input(component_id='input_sex', component_property='value'),
-     Input(component_id='input_chol', component_property='value'),
-     Input(component_id='input_trestbps', component_property='value'),
-     Input(component_id='input_thal', component_property='value'),
-     Input(component_id='input_fbs', component_property='value')
+     Input(component_id='input_genero', component_property='value'),
+     Input(component_id='input_jornada', component_property='value'),
+     Input(component_id='input_natu_colegio', component_property='value'),
+     Input(component_id='input_ingles', component_property='value'),
+     Input(component_id='input_estrato', component_property='value'),
+     Input(component_id='input_internet', component_property='value'),
+     Input(component_id='input_compu', component_property='value'),
+     Input(component_id='input_lavadora', component_property='value'),
+     Input(component_id='input_auto', component_property='value'),
+     Input(component_id='input_personas_hogar', component_property='value'),
+     Input(component_id='input_madre', component_property='value'),
+     Input(component_id='input_padre', component_property='value'),
+     Input(component_id='input_cuartos_hogar', component_property='value')
      ])
-def update_pie_chart(input_age, input_sex, input_chol, input_trestbps, input_thal, input_fbs):
+
+def update_pie_chart(input_genero, input_jornada, input_natu_colegio, input_ingles, input_estrato, input_internet,input_compu,input_lavadora,input_auto,input_personas_hogar,input_madre,input_padre,input_cuartos_hogar):
     
-    valores = ['age','sex','chol','trestbps','thal','fbs']
-    respuesta = [input_age, input_sex, input_chol, input_trestbps, input_thal, input_fbs]
+    valores = ['estu_genero','cole_jornada','cole_naturaleza','desemp_ingles','fami_estratovivienda','fami_tieneinternet', 'fami_tienecomputador','fami_tienelavadora','fami_tieneautomovil', 'fami_personashogar','fami_educacionmadre','fami_educacionpadre','fami_cuartoshogar']
+    respuesta = [input_genero, input_jornada, input_natu_colegio, input_ingles, input_estrato, input_internet,input_compu,input_lavadora,input_auto,input_personas_hogar,input_madre,input_padre,input_cuartos_hogar]
       
     aux={}
     for i in range(0, 6):
@@ -388,46 +492,47 @@ def update_pie_chart(input_age, input_sex, input_chol, input_trestbps, input_tha
             aux[valores[i]]= respuesta[i]
         
     if len(aux)==0:
-        posterior_p = infer.query(["num"], evidence={'age':2,'sex':1,'chol':2,'trestbps':1,'thal':3,'fbs':1})
+        posterior_p = infer.query(["punt_global"], evidence={'estu_genero':1,'cole_jornada':2,'cole_naturaleza':1,'desemp_ingles':3,'fami_estratovivienda':4,'fami_tieneinternet':1, 'fami_tienecomputador':0,'fami_tienelavadora':0,'fami_tieneautomovil':0, 'fami_personashogar':2,'fami_educacionmadre':2,'fami_educacionpadre':2,'fami_cuartoshogar':3})
 
     else:
-        posterior_p = infer.query(["num"], evidence=aux)
+        posterior_p = infer.query(["punt_global"], evidence=aux)
     
-    num_states = modelo.get_cpds("num").state_names["num"]
+    punt_states = modelo.get_cpds("punt_global").state_names["punt_global"]
     
     # valores para el gráfico de torta
-    labels = ['Ausencia de enfermedad cardiaca', 'Presencia de enfermedad cardiaca']
-    values = [posterior_p.values[num_states.index(0)], posterior_p.values[num_states.index(1)]]
+    labels = ['menor a 200', 'entre 201 y 250', 'entre 251 y 300', 'entre 301 y 350', 'mayor a 351']
+    values = [posterior_p.values[punt_states.index(1)], posterior_p.values[punt_states.index(2)], posterior_p.values[punt_states.index(3)], posterior_p.values[punt_states.index(4)], posterior_p.values[punt_states.index(5)]]
     
+    max_value = values[0]  # Asignamos el primer valor de la lista como el máximo inicialmente
+    max_label = labels[0]  # Asignamos el primer label como el correspondiente al valor máximo inicialmente
+
+    for i in range(len(values)):
+        if values[i] > max_value:
+            max_value = values[i]
+            max_label = labels[i]
     
     # Crear el objeto Pie de Plotly
     #if isinstance(values[0], (int, float))
-        
     import plotly.graph_objs as go
+    
+    highlight_color = greens_palette[4] # Color para resaltar la porción del valor máximo
+    colors_list = [highlight_color if label == max_label else blues_palette[i] for i, label in enumerate(labels)]
+
     figura = go.Figure(go.Pie(labels=labels, 
                           values=values,
                           textfont={'size': 20},
-                          #hole=0.5,
-                          hoverinfo='label+percent',
-                          marker=dict(colors=["greenyellow", "red"],
-                                      line=dict(color='#000000', width=1)),
-                          #textposition='outside',
-                          pull = [0, 0.2]
-                         ), layout=(go.Layout( margin=dict(l=100, r=10, t=10, b=10))                     
-                        )
-)
+                          marker=dict(
+                                colors=colors_list # Utilizamos la paleta de colores Greens
+                        ),pull=[0.1 if label == max_label else 0 for label in labels]# Resaltamos la porción del valor máximo
+                          ), layout=(go.Layout( margin=dict(l=100, r=10, t=10, b=10))                     
+                        )   
+    )
     figura.update_layout(paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)")  
-    if values[0] > 0.8 :
-            recomendación = 'Como la probabilidad de que no tengas una enfermedad cardiaca es alta ('+'{:.0%}'.format(values[0]) +'), te sugerimos continuar con tus chequeos de control, teniendo en cuenta que no es urgente que consultes un médico especialista.'
-    elif values[0] > 0.5:
-            recomendación = 'A pesar de que la probabilidad de que tengas una enfermedad cardiaca no es tan alta ('+ '{:.0%}'.format(values[1]) +'), te sugerimos consultar a un médico especialista y así decartar que tengas una enfermedad cardiaca.'
-    elif values[0] > 0.25:
-            recomendación = 'De acuerdo con tus características, es probable que tengas una enfermedad cardiaca ('+'{:.0%}'.format(values[1]) +'), te sugerimos consultar a un médico especialista en el menor tiempo posible.'
-    elif values[0]<=0.25: 
-            recomendación = 'De acuerdo con tus características, la probabilidad de tener una enfermedad cardiaca es muy alta (' +'{:.0%}'.format(values[1]) + '), deberias consultar a un médico especialista de inmediato para confirmar esto y si es así, iniciar un tratamiento.'
-    else: 
-        recomendación = "Lamentamos informarle que no tenemos evidencia para el caso presentado, por lo que no podemos estimarlo."
-       
+    
+    
+    
+    recomendación = 'De acuerdo a las características del evaluado, se estima que el puntaje global del Examen Saber 11° sea '+max_label
+           
     return figura, recomendación
 
 if __name__ == '__main__':
